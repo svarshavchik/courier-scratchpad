@@ -44,7 +44,7 @@ class mail::nntp::GroupOpenTask : public mail::nntp::GroupTask {
 		void restoreIndex(size_t msgNum,
 				  const mail::messageInfo &) override;
 		void restoreKeywords(size_t msgNum,
-				     const std::set<std::string> &) override;
+				     const mail::keywords::list &) override;
 		void abortRestore() override;
 	};
 
@@ -65,7 +65,7 @@ private:
 	void processLISTGROUP(const char *);
 	void processMessageNumber(const char *);
 	void processMessageNumber(msgnum_t n, unsigned char flags,
-				  mail::keywords::Message &keywords);
+				  mail::keywords::message<> &keywords);
 	bool opened();
 };
 

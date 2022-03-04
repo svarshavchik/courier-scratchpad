@@ -130,7 +130,7 @@ public:
 		void toupper();
 		void checkwatch(myFolder &);
 		void setStatusCode(const class mail::messageInfo &flags);
-		void setTag(std::set<std::string> &keywords);
+		void setTag(mail::keywords::list &keywords);
 	};
 
 	// Predicate for std::sort()

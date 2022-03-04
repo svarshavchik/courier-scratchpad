@@ -16,6 +16,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <string.h>
 #include <arpa/inet.h>
 #include "rfc822/rfc822.h"
 #include <courier-unicode.h>
@@ -573,7 +574,7 @@ void mail::account::removeMessages(const std::vector<size_t> &messages,
 #endif
 
 void mail::account::updateKeywords(const vector<size_t> &messages,
-				   const set<string> &keywords,
+				   const mail::keywords::list &keywords,
 				   bool setOrChange,
 				   // false: set, true: see changeTo
 				   bool changeTo,
@@ -588,7 +589,7 @@ void mail::account::updateKeywords(const vector<size_t> &messages,
 				   bool changeTo,
 				   mail::callback &cb)
 {
-	set<string> s;
+	mail::keywords::list s;
 
 	s.insert(keywords.begin(), keywords.end());
 
@@ -602,7 +603,7 @@ void mail::account::updateKeywords(const vector<size_t> &messages,
 				   bool changeTo,
 				   mail::callback &cb)
 {
-	set<string> s;
+	mail::keywords::list s;
 
 	s.insert(keywords.begin(), keywords.end());
 
@@ -610,7 +611,7 @@ void mail::account::updateKeywords(const vector<size_t> &messages,
 }
 
 void mail::account::getFolderKeywordInfo(size_t messageNum,
-					 set<string> &keywordRet)
+					 mail::keywords::list &keywordRet)
 {
 	keywordRet.clear();
 }

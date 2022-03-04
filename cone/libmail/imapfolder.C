@@ -899,11 +899,12 @@ mail::messageInfo mail::imap::getFolderIndexInfo(size_t n)
 	return mail::messageInfo();
 }
 
-void mail::imap::getFolderKeywordInfo(size_t n, std::set<std::string> &kwset)
+void mail::imap::getFolderKeywordInfo(size_t n,
+				      mail::keywords::list &kwset)
 {
 	if (currentFolder != NULL && n < currentFolder->exists)
 	{
-		currentFolder->index[n].keywords.getFlags(kwset);
+		kwset=currentFolder->index[n].keywords.keywords();
 	}
 	else
 		kwset.clear();
@@ -1406,8 +1407,7 @@ void mail::imapFOLDER_COUNT::saveflags(mail::imap &imapAccount)
 
 		size_t n;
 
-		mail::keywords::Message newMessage;
-
+		mail::keywords::list keywords;
 		for (n=0; n<flags.size(); n++)
 		{
 			string f=flags[n];
@@ -1427,14 +1427,13 @@ void mail::imapFOLDER_COUNT::saveflags(mail::imap &imapAccount)
 				i.recent=1;
 			else if (*flags[n].c_str() != '\\')
 			{
-				if (!newMessage.addFlag(imapAccount
-							.keywordHashtable,
-							flags[n]))
-					LIBMAIL_THROW(strerror(errno));
+				keywords.insert(flags[n]);
 			}
 		}
 
-		i.keywords=newMessage;
+		i.keywords=mail::keywords::message<>{
+			imapAccount.keywordHashtable, keywords
+		};
 
 		if (count <= imapAccount.currentFolder->exists)
 			imapAccount.currentFolder->
@@ -2069,24 +2068,17 @@ void mail::imap::saveFolderIndexInfo(size_t messageNum,
 				    &currentFolder->index[messageNum],
 				    &fakeUpdateFlag);
 
-	{
-		set<string> oflags;
-		currentFolder->index[messageNum].keywords.getFlags(oflags);
-
-		set<string>::iterator b=oflags.begin(), e=oflags.end();
-
-		while (b != e)
+	currentFolder->index[messageNum].keywords.enumerate(
+		[&]
+		(const std::string &kw)
 		{
-			if (keywordAllowed(*b))
+			if (keywordAllowed(kw))
 			{
 				if (flags.size() > 0)
 					flags += " ";
-				flags += *b;
+				flags += kw;
 			}
-
-			++b;
-		}
-	}
+		});
 
 	string messageNumBuffer;
 
@@ -2413,7 +2405,7 @@ class mail::imap::updateImapKeywordHelper : public mail::callback {
 	mail::ptr<mail::imap> myimap;
 
 public:
-	set<string> newflags;
+	mail::keywords::list newflags;
 	set<string> uids;
 
 	updateImapKeywordHelper(mail::callback *origCallbackArg,
@@ -2433,32 +2425,26 @@ public:
 
 
 void mail::imap::updateKeywords(const vector<size_t> &messages,
-				const set<string> &keywords,
+				const mail::keywords::list &keywords,
 				bool setOrChange,
 				// false: set, true: see changeTo
 				bool changeTo,
 				callback &cb)
 {
-	set<string>::const_iterator b=keywords.begin(), e=keywords.end();
-
-	while (b != e)
+	for (auto &kw:keywords)
 	{
-		string::const_iterator sb=b->begin(), se=b->end();
-
-		while (sb != se)
+		for (auto ch:kw)
 		{
-			if (strchr(smap ? ",\t\r\n,":"() \t\r\n[]{}\\\"", *sb))
+			if (strchr(smap ? ",\t\r\n,":"() \t\r\n[]{}\\\"", ch))
 			{
 				cb.fail("Invalid flag");
 				return;
 			}
-			++sb;
 		}
-		++b;
 	}
 
-	b=keywords.begin();
-	e=keywords.end();
+	auto b=keywords.begin();
+	auto e=keywords.end();
 
 	if (smap)
 	{
@@ -2513,13 +2499,11 @@ void mail::imap::updateKeywords(const vector<size_t> &messages,
 					continue;
 
 				h->uids.insert(currentFolder->index[n].uid);
-				set<string> tempSet;
+				mail::keywords::list tempSet=
+					currentFolder->index[n].keywords
+					.keywords();
 
-				currentFolder->index[n].keywords
-					.getFlags(tempSet);
-
-				set<string>::iterator
-					tsb=tempSet.begin(),
+				auto tsb=tempSet.begin(),
 					tse=tempSet.end();
 
 				while (tsb != tse)
@@ -2554,10 +2538,9 @@ void mail::imap::updateKeywords(const vector<size_t> &messages,
 			// Nothing to turn off, so punt it.
 			else
 			{
-				set<string> allFlagsV;
+				mail::keywords::list allFlagsV;
 
-				map<string, string>::iterator b=
-					allFlags.begin(), e=allFlags.end();
+				auto b=allFlags.begin(), e=allFlags.end();
 
 				while (b != e)
 				{
@@ -2634,11 +2617,11 @@ void mail::imap::updateImapKeywordHelper
 }
 
 void mail::imap::updateImapKeywords(const vector<size_t> &messages,
-				    const set<string> &keywords,
+				    const mail::keywords::list &keywords,
 				    bool changeTo,
 				    callback &cb)
 {
-	set<string>::const_iterator b=keywords.begin(), e=keywords.end();
+	auto b=keywords.begin(), e=keywords.end();
 	string setCmd= changeTo	? " +FLAGS (":" -FLAGS (";
 	const char *space="";
 
@@ -2664,18 +2647,15 @@ void mail::imap::updateImapKeywords(const vector<size_t> &messages,
 
 				if (changeTo)
 				{
-					if (!currentFolder->index[n]
-					    .keywords.addFlag(keywordHashtable,
-							      flagname))
-					{
-						LIBMAIL_THROW(strerror(errno));
-					}
+					currentFolder->index[n].keywords.add(
+						flagname
+					);
 				}
 				else
 				{
-					if (!currentFolder->index[n].keywords
-					    .remFlag(flagname))
-						LIBMAIL_THROW(strerror(errno));
+					currentFolder->index[n].keywords.remove(
+						flagname
+					);
 				}
 			}
 			++b;

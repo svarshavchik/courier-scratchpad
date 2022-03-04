@@ -227,10 +227,10 @@ private:
 		pop3MessageInfo();
 		~pop3MessageInfo();
 
-		mail::keywords::Message keywords;
+		mail::keywords::message<> keywords;
 	};
 
-	mail::keywords::Hashtable keywordHashtable;
+	mail::keywords::hashtable<> keywordHashtable;
 
 	std::vector<pop3MessageInfo> currentFolderIndex;
 	// Virtual folder index
@@ -299,9 +299,9 @@ public:
 	void saveFolderIndexInfo(size_t,
 				 const messageInfo &,
 				 callback &) override;
-	void getFolderKeywordInfo(size_t, std::set<std::string> &) override;
+	void getFolderKeywordInfo(size_t, mail::keywords::list &) override;
 	void updateKeywords(const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
+			    const mail::keywords::list &keywords,
 			    bool setOrChange,
 			    // false: set, true: see changeTo
 			    bool changeTo,
@@ -379,7 +379,7 @@ private:
 	void restoreIndex(size_t msgNum,
 			  const mail::messageInfo &info) override;
 	void restoreKeywords(size_t msgNum,
-			     const std::set<std::string> &) override;
+			     const mail::keywords::list &) override;
 	void abortRestore() override;
 
 	bool restoreAborted;

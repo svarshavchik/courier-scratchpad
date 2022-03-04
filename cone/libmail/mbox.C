@@ -816,7 +816,7 @@ void mail::mbox::updateFolderIndexInfo(mail::callback &callback)
 }
 
 void mail::mbox::getFolderKeywordInfo(size_t messageNumber,
-				      set<string> &keywords)
+				      mail::keywords::list &keywords)
 {
 	keywords.clear();
 
@@ -827,15 +827,15 @@ void mail::mbox::getFolderKeywordInfo(size_t messageNumber,
 
 		if (p != uidmap.end())
 		{
-			folderMessageIndex[p->second].tag.getKeywords()
-				.getFlags(keywords);
+			keywords=folderMessageIndex[p->second].tag.getKeywords()
+				.keywords();
 		}
 	}
 }
 
 
 void mail::mbox::updateKeywords(const std::vector<size_t> &messages,
-				const std::set<std::string> &keywords,
+				const mail::keywords::list &keywords,
 				bool setOrChange,
 				// false: set, true: see changeTo
 				bool changeTo,

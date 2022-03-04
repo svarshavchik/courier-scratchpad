@@ -929,12 +929,12 @@ void mail::nntp::updateFolderIndexFlags(const vector<size_t> &messages,
 }
 
 void mail::nntp::getFolderKeywordInfo(size_t msgNum,
-				      set<string> &keywords)
+				      mail::keywords::list &keywords)
 {
 	keywords.clear();
 	if (msgNum >= index.size())
 		return;
-	index[msgNum].keywords.getFlags(keywords);
+	keywords=index[msgNum].keywords.keywords();
 }
 
 bool mail::nntp::genericProcessKeyword(size_t msgNum,
@@ -948,7 +948,7 @@ bool mail::nntp::genericProcessKeyword(size_t msgNum,
 
 
 void mail::nntp::updateKeywords(const std::vector<size_t> &messages,
-				const std::set<std::string> &keywords,
+				const mail::keywords::list &keywords,
 				bool setOrChange,
 				// false: set, true: see changeTo
 				bool changeTo,

@@ -15,6 +15,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -25,7 +26,7 @@ LIBMAIL_START
 
 class maildir : public mail::account, public generic {
 
-	bool calledDisconnected; // Disconnected callback has been called.
+	bool calledDisconnected=false; // Disconnected callback has been called.
 
 	void resumed() override;
 	void handler(std::vector<pollfd> &fds, int &timeout) override;
@@ -37,12 +38,12 @@ private:
 public:
 	class addmessage;
 private:
-	folder *sameServerFolderPtr;
+	folder *sameServerFolderPtr=nullptr;
 
 
 protected:
 
-	mail::callback::folder *folderCallback;
+	mail::callback::folder *folderCallback=nullptr;
 	std::string folderPath; // Path to the currently opened folder
 
 	bool ispop3maildrop; // This is a subclass of pop3maildrop
@@ -51,11 +52,11 @@ private:
 
 	// Caching most recently opened message:
 	std::string cacheUID;
-	struct rfc2045 *cacheRfcp;
-	int cachefd;
+	struct rfc2045 *cacheRfcp=nullptr;
+	int cachefd=-1;
 
 
-	mail::keywords::Hashtable keywordHashtable; // Keyword support
+	mail::keywords::hashtable<> keywordHashtable; // Keyword support
 
 	// The current folder's index.
 
@@ -67,7 +68,7 @@ private:
 		std::string lastKnownFilename; // Message was opened as
 		bool changed; // Detects when filename has changed.
 
-		mail::keywords::Message keywords;
+		mail::keywords::message<> keywords;
 		// Keywords set for a message.
 	};
 
@@ -95,10 +96,10 @@ private:
 
 	bool updateFlags(size_t msgNum);
 
-	struct maildirwatch *watchFolder;
-	struct maildirwatch *lockFolder;
-	struct maildirwatch_contents watchFolderContents;
-	bool watchStarting;
+	std::unique_ptr<::maildir::watch> watchFolder;
+	std::unique_ptr<::maildir::watch> lockFolder;
+	std::unique_ptr<::maildir::watch::contents> watchFolderContents;
+	bool watchStarting=false;
 
 public:
 	static bool maildirmake(std::string subdir, bool isFolder);
@@ -177,22 +178,12 @@ private:
 	void updateFolderIndexInfo(mail::callback *, bool);
 public:
 
-	void getFolderKeywordInfo(size_t, std::set<std::string> &) override;
+	void getFolderKeywordInfo(size_t, mail::keywords::list &) override;
 	void updateKeywords(const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
+			    const mail::keywords::list &keywords,
 			    bool setOrChange,
 			    bool changeTo,
 			    callback &cb) override;
-private:
-	bool updateKeywords(std::string dir,
-			    const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
-			    bool setOrChange,
-			    bool changeTo,
-			    struct libmail_kwGeneric *oldFlags,
-			    bool *keepGoing);
-public:
-
 
 	void copyMessagesTo(const std::vector<size_t> &messages,
 			    mail::folder *copyTo,

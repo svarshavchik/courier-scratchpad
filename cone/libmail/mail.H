@@ -31,6 +31,7 @@
 #include "namespace.H"
 #include "objectmonitor.H"
 #include "misc.H"
+#include "maildir/maildirkeywords.h"
 
 #if LIBMAIL_THROW_DEBUG
 #define LIBMAIL_THROW(x) do { fprintf(stderr, "Exception at %s(%d)\n", __FILE__, __LINE__); throw x;} while (0)
@@ -499,7 +500,7 @@ public:
 
 	// Update keywords
 	virtual void updateKeywords(const std::vector<size_t> &messages,
-				    const std::set<std::string> &keywords,
+				    const mail::keywords::list &keywords,
 				    bool setOrChange,
 				    // false: set, true: see changeTo
 				    bool changeTo,
@@ -521,7 +522,7 @@ public:
 			    bool changeTo,
 			    callback &cb);
 
-	virtual void getFolderKeywordInfo(size_t, std::set<std::string> &);
+	virtual void getFolderKeywordInfo(size_t, mail::keywords::list &);
 
 	//
 	// Application requests to be notified about folder changes

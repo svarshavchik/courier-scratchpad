@@ -148,7 +148,7 @@ public:
 	// Generic keyword update for drivers that implement temporary
 	// keywords only (keywords are not saved, and are lost when the
 	// mail account is closed).
-	// 
+	//
 	// genericUpdateKeywords() is intended to be invoked directly by
 	// updateKeywords().  It will dutifully iterate over the supplied
 	// message set, and update each message's keywords, one by one.
@@ -156,34 +156,35 @@ public:
 	// The interface between the generic implementation, and the
 	// implementing driver is a bit tricky.
 	// The driver needs to implement the genericProcessKeyword() method.
-	// In the method, the driver needs to find the mail::keywords::Message
+	// In the method, the driver needs to find the mail::keywords::message<>
 	// object for message #n, and invoke the doUpdateKeyword() method,
-	// passing the reference to the mail::keywords::Message object as
+	// passing the reference to the mail::keywords::message<> object as
 	// the sole argument.  if the driver cannot locate the
-	// mail::keywords::Message object (can happen in the mbox driver, if
+	// mail::keywords::message<> object (can happen in the mbox driver, if
 	// the message was removed by another process, but the application
 	// hasn't noop-ed or expunged the folder).
 
 	class updateKeywordHelper {
 	public:
-		const std::set<std::string> &keywords;
+		const mail::keywords::list &keywords;
 		bool setOrChange;
 		bool changeTo;
 
-		updateKeywordHelper(const std::set<std::string> &keywordsArg,
-				    bool setOrChangeArg,
-				    bool changeToArg);
+		updateKeywordHelper(
+			const mail::keywords::list &keywordsArg,
+			bool setOrChangeArg,
+			bool changeToArg);
 		~updateKeywordHelper();
 
-		bool doUpdateKeyword(mail::keywords::Message &,
-				     mail::keywords::Hashtable &);
+		bool doUpdateKeyword(mail::keywords::message<> &,
+				     mail::keywords::hashtable<> &);
 	};
 
 	virtual bool genericProcessKeyword(size_t messageNumber,
 					   updateKeywordHelper &helper);
 
 	static void genericUpdateKeywords(const std::vector<size_t> &messages,
-					  const std::set<std::string> &keywords,
+					  const mail::keywords::list &keywords,
 					  bool setOrChange,
 					  // false: set, true: see changeTo
 					  bool changeTo,
@@ -240,4 +241,3 @@ private:
 LIBMAIL_END
 
 #endif
-

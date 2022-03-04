@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <pwd.h>
 #include <time.h>
+#include <string.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -141,7 +142,7 @@ void mail::mbox::folder::add::copyTo(mail::file &file)
 		string hdr=mail::mboxMagicTag(messageInfo.uid,
 					      messageInfo,
 
-					      mail::keywords::Message()
+					      mail::keywords::message<>{}
 					      // KEYWORDS
 
 					      ).toString();

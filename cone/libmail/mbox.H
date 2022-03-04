@@ -300,7 +300,7 @@ class mbox : public mail::account, public generic {
 		mboxMagicTag tag;	// The synthesized UID.
 	};
 
-	mail::keywords::Hashtable keywordHashtable;
+	mail::keywords::hashtable<> keywordHashtable;
 	std::vector<mboxMessageIndex> folderMessageIndex; // The folder
 
 	std::map<std::string, size_t> uidmap;	// Look up index from uid.
@@ -411,12 +411,12 @@ public:
 
 
 	void updateKeywords(const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
+			    const mail::keywords::list &keywords,
 			    bool setOrChange,
 			    // false: set, true: see changeTo
 			    bool changeTo,
 			    callback &cb) override;
-	void getFolderKeywordInfo(size_t, std::set<std::string> &) override;
+	void getFolderKeywordInfo(size_t, mail::keywords::list &) override;
 
 	bool genericProcessKeyword(size_t messageNumber,
 				   generic::updateKeywordHelper &helper) override;

@@ -156,7 +156,7 @@ private:
 		~nntpMessageInfo();
 		msgnum_t msgNum;
 
-		mail::keywords::Message keywords;
+		mail::keywords::message<> keywords;
 
 		unsigned char msgFlag;
 #define IDX_DELETED 1
@@ -170,7 +170,7 @@ private:
 				 nntpMessageInfo b);
 
 public:
-	mail::keywords::Hashtable keywordHashtable;
+	mail::keywords::hashtable<> keywordHashtable;
 	std::vector<nntpMessageInfo> index;
 
 	msgnum_t loWatermark, hiWatermark; // Saved from last GROUP
@@ -267,10 +267,10 @@ public:
 
 	void updateFolderIndexInfo(callback &) override;
 
-	void getFolderKeywordInfo(size_t, std::set<std::string> &) override;
+	void getFolderKeywordInfo(size_t, mail::keywords::list &) override;
 
 	void updateKeywords(const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
+			    const mail::keywords::list &keywords,
 			    bool setOrChange,
 			    // false: set, true: see changeTo
 			    bool changeTo,

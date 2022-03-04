@@ -54,14 +54,12 @@ void mail::maildir::addmessage::initialize()
 
 	string ocnt=o.str();
 
-	struct maildir_tmpcreate_info createInfo;
+	::maildir::tmpcreate_info createInfo;
 
-	maildir_tmpcreate_init(&createInfo);
+	createInfo.maildir=folderPath;
+	createInfo.uniq=ocnt;
 
-	createInfo.maildir=folderPath.c_str();
-	createInfo.uniq=ocnt.c_str();
-
-	while ((tmpfile=maildir_tmpcreate_fp(&createInfo)) == NULL)
+	while ((tmpfile=createInfo.fp()) == NULL)
 	{
 		if (errno != EAGAIN)
 		{
@@ -71,17 +69,8 @@ void mail::maildir::addmessage::initialize()
 		sleep(3);
 	}
 
-	try {
-		tmpname=createInfo.tmpname;
-		newname=createInfo.newname;
-		maildir_tmpcreate_free(&createInfo);
-	} catch (...) {
-		fclose(tmpfile);
-		tmpfile=NULL;
-		unlink(createInfo.tmpname);
-		maildir_tmpcreate_free(&createInfo);
-		errmsg=strerror(errno);
-	}
+	tmpname=createInfo.tmpname;
+	newname=createInfo.newname;
 }
 
 mail::maildir::addmessage::~addmessage()

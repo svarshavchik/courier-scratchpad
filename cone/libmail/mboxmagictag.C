@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <sstream>
 
@@ -20,9 +21,11 @@ using namespace std;
 static const char magicTag[]="X-MailPP-UID: ";
 
 mail::mboxMagicTag::mboxMagicTag(string header,
-				 mail::keywords::Hashtable &h)
+				 mail::keywords::hashtable<> &h)
 	: tag("")
 {
+	mail::keywords::list new_keywords;
+
 	if (strncmp(header.c_str(), magicTag, sizeof(magicTag)-1) == 0)
 	{
 		header=header.substr(sizeof(magicTag)-1);
@@ -55,17 +58,19 @@ mail::mboxMagicTag::mboxMagicTag(string header,
 						break;
 					++b;
 				}
-				keywords.addFlag(h, string(c, b));
+				new_keywords.insert(string(c, b));
 			}
 
 			header=header.substr(0, colon);
 		}
 		tag=header;
 	}
+
+	keywords.keywords(h, new_keywords);
 }
 
 mail::mboxMagicTag::mboxMagicTag(string uid, mail::messageInfo flags,
-				 mail::keywords::Message keywordsArg)
+				 mail::keywords::message<> keywordsArg)
 	: tag(""), keywords(keywordsArg)
 {
 	string t="";
@@ -161,17 +166,14 @@ mail::messageInfo mail::mboxMagicTag::getMessageInfo() const
 
 string mail::mboxMagicTag::toString() const
 {
-	set<string> kwSet;
-	set<string>::iterator b, e;
-
-	keywords.getFlags(kwSet);
+	auto kwSet=keywords.keywords();
 
 	string v=string(magicTag) + tag;
 
 	const char *sep=":";
 
-	b=kwSet.begin();
-	e=kwSet.end();
+	auto b=kwSet.begin();
+	auto e=kwSet.end();
 
 	while (b != e)
 	{
