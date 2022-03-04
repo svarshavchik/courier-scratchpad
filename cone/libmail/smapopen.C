@@ -33,7 +33,7 @@ public:
 	void restoreIndex(size_t msgNum,
 			  const mail::messageInfo &info) override;
 	void restoreKeywords(size_t msgNum,
-			     const std::set<std::string> &set) override;
+			     const mail::keywords::list &set) override;
 	void abortRestore() override;
 };
 
@@ -59,12 +59,12 @@ restoreIndex(size_t msgNum,
 
 void mail::smapOPEN::SnapshotRestoreHelper::
 restoreKeywords(size_t msgNum,
-		const set<string> &kset)
+		const mail::keywords::list &kset)
 {
 	if (msgNum < myFolderInfo->index.size())
 	{
 		myFolderInfo->index[msgNum].keywords
-			.setFlags(myimap.keywordHashtable,
+			.keywords(myimap.keywordHashtable,
 				  kset);
 	}
 }

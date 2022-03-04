@@ -192,7 +192,7 @@ void myFolder::RestoreSnapshot::restoreSnapshot(mail::snapshot::restore &r)
 			}
 		}
 
-		set<string> kwset;
+		mail::keywords::list kwset;
 
 		for (;;)
 		{
@@ -507,7 +507,7 @@ void myFolder::newMessagesReceivedAndFiltered(size_t newMessages)
 			n.setStatusCode(flags);
 
 			{
-				set<string> keywords;
+				mail::keywords::list keywords;
 
 				server->server->
 					getFolderKeywordInfo(oldMessages,
@@ -539,7 +539,7 @@ void myFolder::newMessagesReceivedAndFiltered(size_t newMessages)
 			n.setStatusCode(flags);
 
 			{
-				set<string> keywords;
+				mail::keywords::list keywords;
 
 				server->server->
 					getFolderKeywordInfo(oldMessages,
@@ -770,7 +770,7 @@ void myFolder::setTag(vector<size_t> &v, size_t tag)
 			uids.insert(s->server->getFolderIndexInfo(v[i]).uid);
 		}
 
-		set<string> kSet;
+		mail::keywords::list kSet;
 
 		for (i=1; i<Tags::tags.names.size(); i++)
 			if (i != tag)
@@ -973,7 +973,7 @@ void myFolder::messageChanged(size_t n)
 
 	serverIndex[n].setStatusCode(flags);
 
-	set<string> keywords;
+	mail::keywords::list keywords;
 
 	server->server->getFolderKeywordInfo(n, keywords);
 	serverIndex[n].setTag(keywords);
@@ -1021,12 +1021,11 @@ void myFolder::saveSnapshot(string snapshotId)
 
 		for (i=0; i<n; i++)
 		{
-			set<string> keywSet;
+			mail::keywords::list keywSet;
 
 			server->server->getFolderKeywordInfo(i, keywSet);
 
-			set<string>::iterator b=keywSet.begin(),
-				e=keywSet.end();
+			auto b=keywSet.begin(),	e=keywSet.end();
 			bool hasKw=false;
 
 			while (b != e)
@@ -1103,7 +1102,7 @@ bool myFolder::init()
 			n.setStatusCode(flags);
 
 			{
-				set<string> keywords;
+				mail::keywords::list keywords;
 
 				server->server->getFolderKeywordInfo(i,
 								     keywords);
@@ -2231,9 +2230,9 @@ void myFolder::Index::setStatusCode(const class mail::messageInfo &flags)
 		flags.replied ? 'R':' ';
 }
 
-void myFolder::Index::setTag(set<string> &keywords)
+void myFolder::Index::setTag(mail::keywords::list &keywords)
 {
-	set<string>::iterator b=keywords.begin(), e=keywords.end();
+	auto b=keywords.begin(), e=keywords.end();
 
 	tag=0;
 

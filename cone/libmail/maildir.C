@@ -29,6 +29,8 @@
 
 #include <list>
 #include <map>
+#include <memory>
+#include <utility>
 
 using namespace std;
 
@@ -134,8 +136,6 @@ mail::maildir::~maildir()
 {
 	updateNotify(false);
 
-	if (lockFolder)
-		maildirwatch_free(lockFolder);
 	if (!calledDisconnected)
 	{
 		calledDisconnected=true;
@@ -152,44 +152,26 @@ void mail::maildir::resumed()
 void mail::maildir::handler(vector<pollfd> &fds, int &ioTimeout)
 {
 	int fd;
-	int rc;
-	int changed, timeout;
+	bool changed;
+	int timeout;
 
 	if (!watchFolder)
 		return;
 
 	if (watchStarting)
 	{
-		rc=maildirwatch_started(&watchFolderContents, &fd);
-
-		if (rc < 0)
+		if (!watchFolderContents->started())
 		{
 			updateNotify(false);
 			return;
 		}
-		if (rc > 0)
-		{
-			watchStarting=false;
-			updateFolderIndexInfo(nullptr, false);
-		}
-		if (fd < 0)
-			return;
 
-		pollfd pfd;
-
-		pfd.fd=fd;
-		pfd.events=pollread;
-		pfd.revents=0;
-		fds.push_back(pfd);
-		return;
+		watchStarting=false;
+		updateFolderIndexInfo(NULL, false);
 	}
 
-	if (maildirwatch_check(&watchFolderContents, &changed, &fd, &timeout)
-	    < 0)
-	{
-		updateNotify(false);
-		return;
-	}
+	changed=watchFolderContents->check(fd, timeout);
+
 	if (changed)
 	{
 		ioTimeout=0;
@@ -320,40 +302,13 @@ void mail::maildir::checkNewMail(callback &callback)
 
 class mail::maildir::readKeywordHelper {
 
-	struct maildir_kwReadInfo kri;
-
 	mail::maildir *md;
-
-	static struct libmail_kwMessage
-	**findMessageByFilename(const char *filename,
-				int autocreate,
-				size_t *indexNum,
-				void *voidarg);
-
-	static size_t getMessageCount(void *voidarg);
-	static struct libmail_kwMessage
-	**findMessageByIndex(size_t indexNum,
-			     int autocreate,
-			     void *voidarg);
-	static const char *getMessageFilename(size_t n, void *voidarg);
-	static struct libmail_kwHashtable *getKeywordHashtable(void *voidarg);
-	static void updateKeywords(size_t n, struct libmail_kwMessage *kw,
-				   void *voidarg);
-
-	struct libmail_kwMessage**findMessageByFilename(const char *filename,
-							int autocreate,
-							size_t *indexNum);
-
-	size_t getMessageCount();
-	struct libmail_kwMessage **findMessageByIndex(size_t indexNum,
-						      int autocreate);
-	const char *getMessageFilename(size_t n);
-	struct libmail_kwHashtable *getKeywordHashtable();
-	void updateKeywords(size_t n, struct libmail_kwMessage *kw);
 
 	map<string, size_t> filenameMap;
 
-	vector<struct libmail_kwMessage *> kwArray;
+	mail::keywords::hashtable<std::string> h;
+
+	vector<mail::keywords::message<std::string>> kwArray;
 
 
 public:
@@ -370,6 +325,8 @@ mail::maildir::readKeywordHelper::readKeywordHelper(mail::maildir *mdArg)
 	size_t n=md->index.size();
 	size_t i;
 
+	kwArray.reserve(n);
+
 	for (i=0; i<n; i++)
 	{
 		string f=md->index[i].lastKnownFilename;
@@ -379,93 +336,58 @@ mail::maildir::readKeywordHelper::readKeywordHelper(mail::maildir *mdArg)
 			f=f.substr(0, sep);
 
 		filenameMap.insert(make_pair(f, i));
+		kwArray.emplace_back(h, mail::keywords::list{}, f);
 	}
-
-	kwArray.resize(n);
-	for (i=0; i<n; i++)
-		kwArray[i]=nullptr;
 }
 
 bool mail::maildir::readKeywordHelper::go(string maildir, bool &rc)
 {
-	memset(&kri, 0, sizeof(kri));
-
-	kri.findMessageByFilename= &readKeywordHelper::findMessageByFilename;
-	kri.getMessageCount= &readKeywordHelper::getMessageCount;
-	kri.findMessageByIndex= &readKeywordHelper::findMessageByIndex;
-
-	kri.getMessageFilename= &readKeywordHelper::getMessageFilename;
-	kri.getKeywordHashtable= &readKeywordHelper::getKeywordHashtable;
-	kri.updateKeywords=&readKeywordHelper::updateKeywords;
-	kri.voidarg=this;
-
-	size_t i;
-
-	for (i=0; i<kwArray.size(); i++)
-	{
-		if (kwArray[i])
-			libmail_kwmDestroy(kwArray[i]);
-		kwArray[i]=nullptr;
-	}
-
-	char *imap_lock=nullptr;
+	unique_ptr<::maildir::watch::lock> imap_lock;
 
 	if (md->lockFolder)
 	{
-		int flag;
-
-		imap_lock=maildir_lock(maildir.c_str(), md->lockFolder,
-				       &flag);
-
-		if (!imap_lock)
-		{
-			if (!flag)
-			{
-				rc=false;
-				return false;
+		imap_lock.reset(
+			new ::maildir::watch::lock{
+				*md->lockFolder
 			}
-		}
+		);
 	}
 
-	if (maildir_kwRead(maildir.c_str(), &kri) < 0)
+	h.load(maildir,
+	       []
+	       (const string &filename)
+	       {
+		       return filename;
+	       },
+	       [&]
+	       (const string &filename,
+		mail::keywords::list &keywords)
+	       {
+		       auto i=filenameMap.find(filename);
+
+		       if (i == filenameMap.end())
+			       return false;
+
+		       kwArray.at(i->second).keywords(h, keywords,
+						      filename);
+		       return true;
+	       },
+	       []
+	       {
+		       return false;
+	       });
+
+	for (size_t i=0; i<kwArray.size(); i++)
 	{
-		if (imap_lock)
+		auto kw=kwArray[i].keywords();
+
+		if (md->index[i].keywords.keywords() != kw)
 		{
-			unlink(imap_lock);
-			free(imap_lock);
-		}
-
-		rc=false;
-		return false;
-	}
-
-	if (imap_lock)
-	{
-		unlink(imap_lock);
-		free(imap_lock);
-	}
-
-	if (kri.tryagain)
-		return true;
-
-	for (i=0; i<kwArray.size(); i++)
-	{
-		if (kwArray[i] == nullptr)
-		{
-			if (!md->index[i].keywords.empty())
-			{
-				md->index[i].changed=true;
-				md->index[i].keywords=
-					mail::keywords::Message();
-			}
-			continue;
-		}
-
-		if (md->index[i].keywords != kwArray[i])
-		{
+			md->index[i].keywords.keywords(
+				md->keywordHashtable,
+				kw
+			);
 			md->index[i].changed=true;
-			md->index[i].keywords.replace(kwArray[i]);
-			kwArray[i]=nullptr;
 		}
 	}
 
@@ -473,133 +395,7 @@ bool mail::maildir::readKeywordHelper::go(string maildir, bool &rc)
 	return false;
 }
 
-mail::maildir::readKeywordHelper::~readKeywordHelper()
-{
-	size_t i;
-
-	for (i=0; i<kwArray.size(); i++)
-	{
-		if (kwArray[i])
-			libmail_kwmDestroy(kwArray[i]);
-		kwArray[i]=nullptr;
-	}
-}
-
-struct libmail_kwMessage **
-mail::maildir::readKeywordHelper::findMessageByFilename(const char *filename,
-							int autocreate,
-							size_t *indexNum,
-							void *voidarg)
-{
-
-	return ( (mail::maildir::readKeywordHelper *)voidarg)
-		->findMessageByFilename(filename, autocreate, indexNum);
-}
-
-size_t mail::maildir::readKeywordHelper::getMessageCount(void *voidarg)
-{
-	return ( (mail::maildir::readKeywordHelper *)voidarg)
-		->getMessageCount();
-}
-
-struct libmail_kwMessage
-**mail::maildir::readKeywordHelper::findMessageByIndex(size_t indexNum,
-						       int autocreate,
-						       void *voidarg)
-{
-	return ( (mail::maildir::readKeywordHelper *)voidarg)
-		->findMessageByIndex(indexNum, autocreate);
-}
-
-const char *mail::maildir::readKeywordHelper::getMessageFilename(size_t n,
-								 void *voidarg)
-{
-	return ( (mail::maildir::readKeywordHelper *)voidarg)
-		->getMessageFilename(n);
-}
-
-struct libmail_kwHashtable *
-mail::maildir::readKeywordHelper::getKeywordHashtable(void *voidarg)
-{
-	return ( (mail::maildir::readKeywordHelper *)voidarg)
-		->getKeywordHashtable();
-}
-
-void mail::maildir::readKeywordHelper::updateKeywords(size_t n,
-						      struct libmail_kwMessage *kw,
-						      void *voidarg)
-{
-	return ( (mail::maildir::readKeywordHelper *)voidarg)
-		->updateKeywords(n, kw);
-}
-
-
-
-
-struct libmail_kwMessage **
-mail::maildir::readKeywordHelper::findMessageByFilename(const char *filename,
-							int autocreate,
-							size_t *indexNum)
-{
-	map<string, size_t>::iterator i=filenameMap.find(filename);
-
-	if (i == filenameMap.end())
-		return nullptr;
-
-	size_t n=i->second;
-
-	if (indexNum)
-		*indexNum=n;
-
-	if (kwArray[n] == nullptr && autocreate)
-		if ((kwArray[n]=libmail_kwmCreate()) == nullptr)
-			return nullptr;
-	return &kwArray[n];
-}
-
-size_t mail::maildir::readKeywordHelper::getMessageCount()
-{
-	return kwArray.size();
-}
-
-struct libmail_kwMessage
-**mail::maildir::readKeywordHelper::findMessageByIndex(size_t n,
-						       int autocreate)
-{
-	if (n >= kwArray.size())
-		return nullptr;
-
-	if (kwArray[n] == nullptr && autocreate)
-		if ((kwArray[n]=libmail_kwmCreate()) == nullptr)
-			return nullptr;
-	return &kwArray[n];
-}
-
-const char *mail::maildir::readKeywordHelper::getMessageFilename(size_t n)
-{
-	if (n >= kwArray.size())
-		return nullptr;
-
-	return md->index[n].lastKnownFilename.c_str();
-}
-
-struct libmail_kwHashtable *
-mail::maildir::readKeywordHelper::getKeywordHashtable()
-{
-	return &md->keywordHashtable.kwh;
-}
-
-void mail::maildir::readKeywordHelper::updateKeywords(size_t n,
-						      struct libmail_kwMessage *kw)
-{
-	if (n >= kwArray.size())
-		return;
-
-	if (kwArray[n])
-		libmail_kwmDestroy(kwArray[n]);
-
-	kwArray[n]=kw;
-}
+mail::maildir::readKeywordHelper::~readKeywordHelper()=default;
 
 void mail::maildir::checkNewMail(callback *callback)
 {
@@ -860,7 +656,7 @@ bool mail::maildir::updateFlags(size_t msgNum)
 
 		size_t i=s.find(MDIRSEP[0]);
 
-		if (i != std::string::npos)
+		if (i != string::npos)
 			s=s.substr(0, i);
 
 		s += MDIRSEP "2,";
@@ -955,7 +751,7 @@ void mail::maildir::updateFolderIndexFlags(const vector<size_t> &messages,
 	callback.success(errmsg);
 }
 
-void mail::maildir::removeMessages(const std::vector<size_t> &messages,
+void mail::maildir::removeMessages(const vector<size_t> &messages,
 				callback &cb)
 {
 	vector<size_t>::const_iterator b=messages.begin(), e=messages.end();
@@ -1106,10 +902,9 @@ void mail::maildir::open(string pathStr, mail::callback &callback,
 		b++;
 	}
 
-	if (lockFolder)
-		maildirwatch_free(lockFolder);
-
-	lockFolder=maildirwatch_alloc(md.c_str());
+	lockFolder.reset(
+		new ::maildir::watch{md}
+	);
 
 	readKeywordHelper rkh(this);
 
@@ -1352,185 +1147,69 @@ void mail::maildir::updateNotify(bool enableDisable)
 {
 	if (!enableDisable)
 	{
-		if (watchFolder)
-		{
-			maildirwatch_end(&watchFolderContents);
-			maildirwatch_free(watchFolder);
-			watchFolder=nullptr;
-		}
+		watchFolderContents={};
+		watchFolder={};
 		return;
 	}
 
 	if (folderPath.size() == 0 || watchFolder)
 		return;
 
-	char *dir=maildir_name2dir(path.c_str(), folderPath.c_str());
+	auto dir=::maildir::name2dir(path, folderPath);
 
-	if (!dir)
+	if (dir.empty())
 		return;
 
-	watchFolder=maildirwatch_alloc(dir);
+	watchFolder.reset(new ::maildir::watch{dir});
 
-	free(dir);
-
-	if (!watchFolder)
-		return;
-
-	if (maildirwatch_start(watchFolder, &watchFolderContents) < 0)
-	{
-		maildirwatch_free(watchFolder);
-		return;
-	}
+	watchFolderContents.reset(new ::maildir::watch::contents{
+			*watchFolder
+		}
+	);
 	watchStarting=true;
 }
 
 
-void mail::maildir::getFolderKeywordInfo(size_t n, std::set<std::string> &s)
+void mail::maildir::getFolderKeywordInfo(size_t n, mail::keywords::list &s)
 {
 	string messageFn=getfilename(n);
 
 	if (messageFn.size() == 0)
 		return;
 
-	index[n].keywords.getFlags(s);
+	s=index[n].keywords.keywords();
 }
 
 void mail::maildir::updateKeywords(const vector<size_t> &messages,
-				   const set<string> &keywords,
+				   const mail::keywords::list &keywords,
 				   bool setOrChange,
 				   bool changeTo,
 				   mail::callback &cb)
 {
-	bool keepGoing;
-
 	if (folderPath.size() == 0)
 	{
 		cb.success("Ok.");
 		return;
 	}
 
-	string dir;
+	string dir= ::maildir::name2dir(path, folderPath);
 
+	if (dir.empty())
 	{
-		char *dirs=maildir_name2dir(path.c_str(), folderPath.c_str());
-		if (!dirs)
-		{
-			cb.fail(strerror(errno));
-			return;
-		}
-
-		try {
-			dir=dirs;
-			free(dirs);
-		} catch (...) {
-			free(dirs);
-			LIBMAIL_THROW(LIBMAIL_THROW_EMPTY);
-		}
+		cb.fail(strerror(errno));
+		return;
 	}
 
-	if (!setOrChange)
+	unique_ptr<::maildir::watch::lock> imap_lock;
+
+	if (lockFolder)
 	{
-		if (!updateKeywords(dir,
-				    messages, keywords, setOrChange, changeTo,
-				    nullptr, nullptr))
-		{
-			cb.fail(strerror(errno));
-			return;
-		}
+		imap_lock.reset(
+			new ::maildir::watch::lock{
+				*lockFolder
+			}
+		);
 	}
-	else do {
-		struct libmail_kwGeneric g;
-
-		libmail_kwgInit(&g);
-
-		char *imap_lock=nullptr;
-
-		if (lockFolder)
-		{
-			int flag;
-
-			imap_lock=maildir_lock(dir.c_str(), lockFolder,
-					       &flag);
-
-			if (!imap_lock)
-			{
-				if (!flag)
-				{
-					libmail_kwgDestroy(&g);
-					cb.fail(strerror(errno));
-					return;
-				}
-			}
-		}
-
-		try {
-			if (libmail_kwgReadMaildir(&g, dir.c_str()) < 0)
-			{
-				if (imap_lock)
-				{
-					unlink(imap_lock);
-					free(imap_lock);
-					imap_lock=nullptr;
-				}
-
-				cb.fail(strerror(errno));
-				return;
-			}
-
-			keepGoing=false;
-
-			if (!updateKeywords(dir,
-					    messages, keywords, setOrChange,
-					    changeTo,
-					    &g, &keepGoing))
-			{
-				if (imap_lock)
-				{
-					unlink(imap_lock);
-					free(imap_lock);
-					imap_lock=nullptr;
-				}
-				libmail_kwgDestroy(&g);
-				if (keepGoing)
-					continue;
-
-				cb.fail(strerror(errno));
-				return;
-			}
-			if (imap_lock)
-			{
-				unlink(imap_lock);
-				free(imap_lock);
-				imap_lock=nullptr;
-			}
-			libmail_kwgDestroy(&g);
-		} catch (...) {
-			if (imap_lock)
-			{
-				unlink(imap_lock);
-				free(imap_lock);
-				imap_lock=nullptr;
-			}
-			libmail_kwgDestroy(&g);
-			throw;
-		}
-	} while (keepGoing);
-
-	cb.success("Message keywords updated.");
-}
-
-
-bool mail::maildir::updateKeywords(string dir,
-				   const vector<size_t> &messages,
-				   const set<string> &keywords,
-				   bool setOrChange,
-				   bool changeTo,
-				   struct libmail_kwGeneric *g,
-				   bool *keepGoing)
-{
-	mail::keywords::Message m;
-
-	m.setFlags(keywordHashtable, keywords);
 
 	MONITOR(mail::maildir);
 
@@ -1546,148 +1225,64 @@ bool mail::maildir::updateKeywords(string dir,
 		if (messageFn.size() == 0)
 			continue;
 
+		mail::keywords::list cpy, orig=index[n].keywords.keywords();
+
 		if (!setOrChange)
 		{
-			set<string> newFlags;
-
-			m.getFlags(newFlags);
-			index[n].keywords.setFlags(keywordHashtable,
-						   newFlags);
-			// Can't copy, because of reference counting.
-
-			char *tmpname, *newname;
-
-			if (maildir_kwSave(dir.c_str(),
-					   index[n].lastKnownFilename
-					   .c_str(), newFlags,
-					   &tmpname, &newname, 0) < 0)
-				return false;
-
-			int rc=rename(tmpname, newname);
-			free(tmpname);
-			free(newname);
-
-			if (rc < 0)
-				return false;
-		}
-		else if (changeTo)
-		{
-			struct libmail_kwGenericEntry *origKw=
-				libmail_kwgFindByName(g, index[n]
-						      .lastKnownFilename
-						      .c_str());
-
-			set<string>::iterator b=keywords.begin(),
-				e=keywords.end();
-
-			while (b != e)
-			{
-				if (!index[n].keywords
-				    .addFlag(keywordHashtable, *b))
-				{
-					LIBMAIL_THROW(strerror(errno));
-				}
-
-				if (origKw && origKw->keywords &&
-				    libmail_kwmSetName(&g->kwHashTable,
-						       origKw->keywords,
-						       b->c_str()))
-					LIBMAIL_THROW(strerror(errno));
-
-				++b;
-			}
-
-			char *tmpname, *newname;
-
-			set<string> newFlags;
-
-			index[n].keywords.getFlags(newFlags);
-
-			if ((origKw && origKw->keywords ?
-			     maildir_kwSave(dir.c_str(),
-					    index[n].lastKnownFilename
-					    .c_str(), origKw->keywords,
-					    &tmpname, &newname,
-					    1):
-			     maildir_kwSave(dir.c_str(),
-					    index[n].lastKnownFilename
-					    .c_str(), newFlags,
-					    &tmpname, &newname,
-					    1)) < 0)
-				return false;
-
-			int rc=link(tmpname, newname);
-			unlink(tmpname);
-			free(tmpname);
-			free(newname);
-
-			if (rc < 0)
-			{
-				if (errno == EEXIST)
-					*keepGoing=true;
-				return false;
-			}
+			cpy=keywords;
 		}
 		else
 		{
-			struct libmail_kwGenericEntry *origKw=
-				libmail_kwgFindByName(g, index[n]
-						      .lastKnownFilename
-						      .c_str());
+			cpy=orig;
 
-			set<string>::iterator b=keywords.begin(),
-				e=keywords.end();
-
-			while (b != e)
+			for (auto &kw:keywords)
 			{
-				struct libmail_keywordEntry *kef;
-
-				if (!index[n].keywords.remFlag(*b))
-					LIBMAIL_THROW(strerror(errno));
-
-				if (origKw && origKw->keywords &&
-				    (kef=libmail_kweFind(&g->kwHashTable,
-							 b->c_str(),
-							 0)) != nullptr)
-				{
-					libmail_kwmClear(origKw->keywords,
-							 kef);
-				}
-				++b;
-			}
-			char *tmpname, *newname;
-			set<string> newFlags;
-
-			index[n].keywords.getFlags(newFlags);
-
-			if ((origKw && origKw->keywords
-			     ? maildir_kwSave(dir.c_str(),
-					      index[n].lastKnownFilename
-					      .c_str(), origKw->keywords,
-					      &tmpname, &newname,
-					   1)
-			     : maildir_kwSave(dir.c_str(),
-					      index[n].lastKnownFilename
-					      .c_str(), newFlags,
-					      &tmpname, &newname,
-					      1)) < 0)
-				return false;
-
-			int rc=link(tmpname, newname);
-			unlink(tmpname);
-			free(tmpname);
-			free(newname);
-
-			if (rc < 0)
-			{
-				if (errno == EEXIST)
-					*keepGoing=true;
-				return false;
+				if (changeTo)
+					cpy.insert(kw);
+				else
+					cpy.erase(kw);
 			}
 		}
 
-		if (folderCallback)
-			folderCallback->messageChanged(n);
+		if (cpy == orig)
+			continue;
+
+		int counter=0;
+
+		while (!mail::keywords::update(
+			       dir, index[n].lastKnownFilename, cpy)
+		)
+		{
+			if (++counter > 1000)
+				LIBMAIL_THROW("Unable to update keywords");
+
+			mail::keywords::hashtable<string> h;
+			unordered_map<string,
+					   mail::keywords::message<string>
+					   > messages;
+			h.load(dir,
+			       []
+			       (const string &filename)
+			       {
+				       return filename;
+			       },
+			       [&]
+			       (const string &filename,
+				mail::keywords::list &keywords)
+			       {
+				       messages[filename].keywords(
+					       h,
+					       keywords,
+					       filename
+				       );
+				       return true;
+			       },
+			       []
+			       {
+				       return false;
+			       });
+		}
 	}
-	return true;
+
+	cb.success("Message keywords updated.");
 }

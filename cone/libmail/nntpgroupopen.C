@@ -58,12 +58,12 @@ void mail::nntp::GroupOpenTask::snapshotRestoreHelper
 
 void mail::nntp::GroupOpenTask::snapshotRestoreHelper
 ::restoreKeywords(size_t msgNum,
-		  const std::set<std::string> &kwSet)
+		  const mail::keywords::list &kwSet)
 {
 	if (msgNum >= index.size())
 		return;
 
-	index[msgNum].keywords.setFlags(orignntp.keywordHashtable, kwSet);
+	index[msgNum].keywords.keywords(orignntp.keywordHashtable, kwSet);
 }
 
 void mail::nntp::GroupOpenTask::snapshotRestoreHelper::abortRestore()
@@ -299,7 +299,7 @@ void mail::nntp::GroupOpenTask::processMessageNumber(const char *msg)
 
 	if (!i.bad() && !i.fail())
 	{
-		mail::keywords::Message kw;
+		mail::keywords::message<> kw;
 
 		processMessageNumber(n, 0, kw);
 	}
@@ -307,7 +307,7 @@ void mail::nntp::GroupOpenTask::processMessageNumber(const char *msg)
 
 void mail::nntp::GroupOpenTask::processMessageNumber(msgnum_t n,
 						     unsigned char flags,
-						     mail::keywords::Message
+						     mail::keywords::message<>
 						     &kw)
 {
 	while (msglistI != myNewsrc.msglist.end() &&

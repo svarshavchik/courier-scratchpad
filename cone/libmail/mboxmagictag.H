@@ -24,14 +24,14 @@ class mboxMagicTag {
 
 	std::string tag;
 
-	mail::keywords::Message keywords;
+	mail::keywords::message<> keywords;
 
 public:
-	mboxMagicTag(std::string header, mail::keywords::Hashtable &h);
+	mboxMagicTag(std::string header, mail::keywords::hashtable<> &h);
 	// Initialize from the first header line.
 
 	mboxMagicTag(std::string uid, mail::messageInfo flags,
-		     mail::keywords::Message keywordsArg);
+		     mail::keywords::message<> keywordsArg);
 	// Manual initialization
 
 	mboxMagicTag();
@@ -47,8 +47,8 @@ public:
 	// Convert to a header line, sans the newline.
 
 
-	mail::keywords::Message &getKeywords() { return keywords; }
-	void setKeywords(const mail::keywords::Message &m) { keywords=m; }
+	mail::keywords::message<> &getKeywords() { return keywords; }
+	void setKeywords(const mail::keywords::message<> &m) { keywords=m; }
 
 };
 

@@ -1,3 +1,7 @@
+2026-03-15  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* courier-imap: Convert C to C++ code.
+
 2026-03-07  Sam Varshavchik  <mrsam@courier-mta.com>
 
 	* courier/webmlmd.C (adminrequest): implement modmimefetch, fetch

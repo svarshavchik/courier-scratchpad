@@ -99,7 +99,7 @@ void myFolder::FolderFilter::doStep(myServer::Callback &cb)
 	if (step->type == Filter::Step::filter_step_tag)
 	{
 		vector<size_t> n;
-		set<string> allTags;
+		mail::keywords::list allTags;
 
 		size_t i;
 
@@ -309,7 +309,7 @@ void myFolder::FolderFilter::doStep2(myServer::Callback &cb,
 				return;
 			}
 
-			set<string> keywords;
+			mail::keywords::list keywords;
 
 			keywords.insert(Tags::tags.getTagName(n));
 

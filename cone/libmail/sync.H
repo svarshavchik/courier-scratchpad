@@ -84,7 +84,7 @@
 //      bool ok=mail->saveFolderIndexInfo(msgNum, msgInfo);
 //
 //	bool updateKeywords(const std::vector<size_t> &messages,
-//			    const std::set<std::string> &keywords,
+//			    const mail::keywords::list &keywords,
 //			    bool setOrChange,
 //			    // false: set, true: see changeTo
 //			    bool changeTo);
@@ -306,13 +306,13 @@ public:
 	class mail::messageInfo getFolderIndexInfo(size_t);
 
 	void getFolderKeywordInfo(size_t msgNum,
-				  std::set<std::string> &keywords);
+				  mail::keywords::list &keywords);
 
 	bool saveFolderIndexInfo(size_t messageNum,
 				 const mail::messageInfo &newInfo);
 
 	bool updateKeywords(const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
+			    const mail::keywords::list &keywords,
 			    bool setOrChange,
 			    // false: set, true: see changeTo
 			    bool changeTo);

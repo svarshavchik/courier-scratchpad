@@ -15,6 +15,7 @@
 #include "rfc822/rfc822.h"
 #include <string>
 #include <vector>
+#include <memory>
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -55,7 +56,7 @@ private:
 	std::shared_ptr<rfc2045::entity> cacheEntity;
 	std::shared_ptr<rfc822::fdstreambuf> cacheFd;
 
-	mail::keywords::Hashtable keywordHashtable; // Keyword support
+	mail::keywords::hashtable<> keywordHashtable; // Keyword support
 
 	// The current folder's index.
 
@@ -67,7 +68,7 @@ private:
 		std::string lastKnownFilename; // Message was opened as
 		bool changed; // Detects when filename has changed.
 
-		mail::keywords::Message keywords;
+		mail::keywords::message<> keywords;
 		// Keywords set for a message.
 	};
 
@@ -95,9 +96,9 @@ private:
 
 	bool updateFlags(size_t msgNum);
 
-	struct maildirwatch *watchFolder{nullptr};
-	struct maildirwatch *lockFolder{nullptr};
-	struct maildirwatch_contents watchFolderContents;
+	std::unique_ptr<::maildir::watch> watchFolder;
+	std::unique_ptr<::maildir::watch> lockFolder;
+	std::unique_ptr<::maildir::watch::contents> watchFolderContents;
 	bool watchStarting{false};
 
 public:
@@ -177,22 +178,12 @@ private:
 	void updateFolderIndexInfo(mail::callback *, bool);
 public:
 
-	void getFolderKeywordInfo(size_t, std::set<std::string> &) override;
+	void getFolderKeywordInfo(size_t, mail::keywords::list &) override;
 	void updateKeywords(const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
+			    const mail::keywords::list &keywords,
 			    bool setOrChange,
 			    bool changeTo,
 			    callback &cb) override;
-private:
-	bool updateKeywords(std::string dir,
-			    const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
-			    bool setOrChange,
-			    bool changeTo,
-			    struct libmail_kwGeneric *oldFlags,
-			    bool *keepGoing);
-public:
-
 
 	void copyMessagesTo(const std::vector<size_t> &messages,
 			    mail::folder *copyTo,

@@ -700,7 +700,7 @@ mail::messageInfo mail::ACCOUNT::getFolderIndexInfo(size_t n)
 }
 
 void mail::ACCOUNT::getFolderKeywordInfo(size_t msgNum,
-					 set<string> &keywords)
+					 mail::keywords::list &keywords)
 {
 	if (msgNum >= getFolderIndexSize())
 	{
@@ -711,7 +711,7 @@ void mail::ACCOUNT::getFolderKeywordInfo(size_t msgNum,
 }
 
 bool mail::ACCOUNT::updateKeywords(const std::vector<size_t> &messages,
-				   const std::set<std::string> &keywords,
+				   const mail::keywords::list &keywords,
 				   bool setOrChange,
 				   // false: set, true: see changeTo
 				   bool changeTo)
@@ -732,7 +732,7 @@ bool mail::ACCOUNT::updateKeywords(const std::vector<size_t> &messages,
 				   // false: set, true: see changeTo
 				   bool changeTo)
 {
-	set<string> keySet;
+	mail::keywords::list keySet;
 
 	keySet.insert(keywords.begin(), keywords.end());
 	return updateKeywords(messages, keySet, setOrChange, changeTo);
@@ -744,7 +744,7 @@ bool mail::ACCOUNT::updateKeywords(const std::vector<size_t> &messages,
 				   // false: set, true: see changeTo
 				   bool changeTo)
 {
-	set<string> keySet;
+	mail::keywords::list keySet;
 
 	keySet.insert(keywords.begin(), keywords.end());
 	return updateKeywords(messages, keySet, setOrChange, changeTo);

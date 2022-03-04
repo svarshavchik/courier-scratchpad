@@ -390,22 +390,13 @@ bool mail::smapHandler::processLine(imap &imapAccount,
 
 					commaSplit( (*b)+9, flagList);
 
-					vector<string>::iterator fb, fe;
-
-					fb=flagList.begin();
-					fe=flagList.end();
-
-					mail::keywords::Message newMessage;
-
-					while (fb != fe)
-					{
-						if (!newMessage
-						    .addFlag(imapAccount.
-							     keywordHashtable,
-							     *fb))
-							LIBMAIL_THROW(strerror(errno));
-						++fb;
-					}
+					mail::keywords::message<> newMessage{
+						imapAccount.keywordHashtable,
+						mail::keywords::list{
+							flagList.begin(),
+							flagList.end()
+						}
+					};
 
 					imapAccount.currentFolder
 						->index[msgNum].keywords=

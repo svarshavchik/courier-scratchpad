@@ -16,6 +16,7 @@
 #include	<map>
 #include	<set>
 #include	<queue>
+#include	<string.h>
 
 #include "imapfolders.H"
 #include <courier-unicode.h>
@@ -118,7 +119,7 @@ public:
 
 	// INTERNAL FUNCTIONS
 
-	mail::keywords::Hashtable keywordHashtable; // Keyword support
+	mail::keywords::hashtable<> keywordHashtable; // Keyword support
 
 	bool keywordAllowed(std::string);
 
@@ -268,7 +269,7 @@ private:
 
 	size_t getFolderIndexSize() override;
 	class mail::messageInfo getFolderIndexInfo(size_t) override;
-	void getFolderKeywordInfo(size_t, std::set<std::string> &) override;
+	void getFolderKeywordInfo(size_t, mail::keywords::list &) override;
 
 public:
 	// NOT public interface, for friends only:
@@ -382,13 +383,13 @@ private:
 				    mail::callback &callback);
 
 	void updateKeywords(const std::vector<size_t> &messages,
-			    const std::set<std::string> &keywords,
+			    const mail::keywords::list &keywords,
 			    bool setOrChange,
 			    // false: set, true: see changeTo
 			    bool changeTo,
 			    callback &cb) override;
 	void updateImapKeywords(const std::vector<size_t> &messages,
-				const std::set<std::string> &keywords,
+				const mail::keywords::list &keywords,
 				bool changeTo,
 				callback &cb);
 	class updateImapKeywordHelper;

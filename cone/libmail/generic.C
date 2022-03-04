@@ -1833,9 +1833,10 @@ void mail::generic::genericMoveMessages(mail::account *account,
 
 //////////////////////////////////////////////////////////////////////////
 
-mail::generic::updateKeywordHelper::updateKeywordHelper(const set<string> &keywordsArg,
-							bool setOrChangeArg,
-							bool changeToArg)
+mail::generic::updateKeywordHelper::updateKeywordHelper(
+	const mail::keywords::list &keywordsArg,
+	bool setOrChangeArg,
+	bool changeToArg)
 	: keywords(keywordsArg),
 	  setOrChange(setOrChangeArg),
 	  changeTo(changeToArg)
@@ -1847,21 +1848,29 @@ mail::generic::updateKeywordHelper::~updateKeywordHelper()
 }
 
 bool mail::generic::updateKeywordHelper
-::doUpdateKeyword(mail::keywords::Message &keyWords,
-		  mail::keywords::Hashtable &h)
+::doUpdateKeyword(mail::keywords::message<> &keyWords,
+		  mail::keywords::hashtable<> &h)
 {
 	if (!setOrChange)
-		return keyWords.setFlags(h, keywords);
+	{
+		keyWords.keywords(h, keywords);
+		return true;
+	}
 
-	set<string>::iterator b=keywords.begin(), e=keywords.end();
+	auto b=keywords.begin(), e=keywords.end();
+
+	auto kw=keyWords.keywords();
 
 	while (b != e)
 	{
-		if (!(changeTo ? keyWords.addFlag(h, *b):
-		      keyWords.remFlag(*b)))
-			return false;
+		if (changeTo)
+			kw.insert(*b);
+		else
+			kw.erase(*b);
 		++b;
 	}
+
+	keyWords.keywords(h, kw);
 
 	return true;
 }
@@ -1873,7 +1882,7 @@ bool mail::generic::genericProcessKeyword(size_t messageNumber,
 }
 
 void mail::generic::genericUpdateKeywords(const vector<size_t> &messages,
-					  const set<string> &keywords,
+					  const mail::keywords::list &keywords,
 					  bool setOrChange,
 					  // false: set, true: see changeTo
 					  bool changeTo,

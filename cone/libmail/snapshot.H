@@ -10,7 +10,7 @@
 #include "namespace.H"
 
 #include <string>
-#include <set>
+#include "maildir/maildirkeywords.h"
 
 LIBMAIL_START
 
@@ -50,8 +50,9 @@ public:
 
 		virtual void restoreIndex(size_t msgNum,
 					  const mail::messageInfo &)=0;
-		virtual void restoreKeywords(size_t msgNum,
-					     const std::set<std::string> &)=0;
+		virtual void restoreKeywords(
+			size_t msgNum,
+			const mail::keywords::list &)=0;
 		virtual void abortRestore()=0;
 	};
 

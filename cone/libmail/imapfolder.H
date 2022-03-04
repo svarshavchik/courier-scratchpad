@@ -27,7 +27,7 @@ public:
 
 	class indexInfo : public mail::messageInfo {
 	public:
-		mail::keywords::Message keywords;
+		mail::keywords::message<> keywords;
 
 		indexInfo();
 		~indexInfo();

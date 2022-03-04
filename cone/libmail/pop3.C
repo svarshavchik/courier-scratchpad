@@ -2572,16 +2572,16 @@ void mail::pop3::updateFolderIndexFlags(const vector<size_t> &messages,
 	callback.success("OK");
 }
 
-void mail::pop3::getFolderKeywordInfo(size_t n, set<string> &kwSet)
+void mail::pop3::getFolderKeywordInfo(size_t n, mail::keywords::list &kwSet)
 {
 	kwSet.clear();
 
 	if (n < currentFolderIndex.size())
-		currentFolderIndex[n].keywords.getFlags(kwSet);
+		kwSet=currentFolderIndex[n].keywords.keywords();
 }
 
 void mail::pop3::updateKeywords(const std::vector<size_t> &messages,
-				const std::set<std::string> &keywords,
+				const mail::keywords::list &keywords,
 				bool setOrChange,
 				// false: set, true: see changeTo
 				bool changeTo,
@@ -2736,11 +2736,12 @@ void mail::pop3::restoreIndex(size_t msgNum,
 }
 
 void mail::pop3::restoreKeywords(size_t msgNum,
-				 const std::set<std::string> &kwSet)
+				 const mail::keywords::list &kwSet)
 {
 	if (msgNum < currentFolderIndex.size())
-		currentFolderIndex[msgNum].keywords
-			.setFlags(keywordHashtable, kwSet);
+		currentFolderIndex[msgNum].keywords.keywords(
+			keywordHashtable, kwSet
+		);
 }
 
 void mail::pop3::abortRestore()
