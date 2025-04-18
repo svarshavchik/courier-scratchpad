@@ -1175,3 +1175,20 @@ static int help()
 	ack.close();
 	return (wait4sendmail(p));
 }
+
+#include <charconv>
+#include <string>
+
+void foo(char *b,
+	 char *e,
+	 unsigned long &v)
+{
+	std::from_chars(b, e, v);
+}
+
+void bar(char *b,
+	 char *e,
+	 unsigned long &v)
+{
+	std::to_chars(b, e, v);
+}
