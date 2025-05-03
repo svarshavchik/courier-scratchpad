@@ -11,5 +11,6 @@ jobs:
   build-combined:
      uses: ./.github/workflows/build-combined.yml
      with:
-       libsrepo: svarshavchik/courier-libs
+       # libsrepo: svarshavchik/courier-libs
+       libsrepo: svarshavchik/courier-libs-scratchpad
        libsbranch: master
