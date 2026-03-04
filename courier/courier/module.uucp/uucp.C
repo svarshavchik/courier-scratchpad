@@ -131,7 +131,7 @@ std::string_view rw_autoconvert::rwheader(
 	std::string_view lcname,
 	std::string_view full_header)
 {
-	if (e.parent_entity)
+	if (e.get_parent_entity())
 		return full_header;
 
 	if (!rfc822::header_is_addr(lcname))

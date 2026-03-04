@@ -8,8 +8,11 @@
 #endif
 #include	"courier.h"
 #include	"moduledel.h"
+#include	"comctlfile.h"
+#include	"comqueuename.h"
 #include	"maxlongsize.h"
 #include	"comreadtime.h"
+#include	"libesmtp.h"
 #include	<sys/types.h>
 #include	<sys/uio.h>
 #include	<time.h>
@@ -30,6 +33,8 @@
 #include	"mybuf.h"
 #include	"esmtpconfig.h"
 #include	"rfc1035/rfc1035.h"
+#include	<vector>
+#include	<iostream>
 
 static time_t	esmtpkeepalive;
 
@@ -95,6 +100,11 @@ int isloopback(const char *ip)
 	return (0);
 }
 
+const char *testmode_sender;
+const char *testmode_host;
+char **testmode_recipients;
+unsigned testmode_n_recipients;
+
 int main(int argc, char **argv)
 {
         clog_open_syslog("courieresmtp");
@@ -103,6 +113,16 @@ int main(int argc, char **argv)
 	if (argc < 2)
 	{
 		esmtpparent();
+	}
+	else if (strcmp(argv[1], "test") == 0 && argc > 4)
+	{
+		testmode_sender=argv[2];
+		testmode_host=argv[3];
+		testmode_recipients=argv+4;
+		testmode_n_recipients=argc-4;
+
+		interfaces=rfc1035_ifconf(NULL);
+		esmtpchild(0);
 	}
 	else
 	{
@@ -537,4 +557,117 @@ size_t	l=strlen(line);
 		kill(info[i].pid, SIGKILL);
 	}
 	info[i].isbusy=1;
+}
+
+struct moduledel *esmtp_module_getdel()
+{
+	if (testmode_sender)
+	{
+		static struct moduledel simulated;
+
+		static std::vector<std::string> simulated_recipients;
+		static std::vector<char *> simulated_charbuf;
+
+		if (!testmode_host)
+			return nullptr;
+
+		simulated.msgid="test";
+		simulated.sender=testmode_sender;
+		simulated.delid="test";
+		simulated.host=testmode_host;
+		simulated.nreceipients=testmode_n_recipients;
+
+		for (unsigned i=0; i<testmode_n_recipients; ++i)
+		{
+			char buf[NUMBUFSIZE];
+
+			simulated_recipients.push_back(
+				libmail_str_size_t(i, buf)
+			);
+			simulated_recipients.push_back(testmode_recipients[i]);
+		}
+
+		for (auto &s:simulated_recipients)
+			simulated_charbuf.push_back(s.data());
+
+		simulated.receipients=simulated_charbuf.data();
+
+		testmode_host=nullptr;
+
+		return &simulated;
+	}
+	return module_getdel();
+}
+
+int esmtp_open_ctlfile(struct moduledel *del,
+		       struct ctlfile *ctf)
+{
+	if (testmode_sender)
+	{
+		auto tmpfile=rfc822::fdstreambuf::tmpfile();
+
+		{
+			std::ostream o{&tmpfile};
+
+			rfc822::fdstreambuf stdin{dup(0)};
+			o << &stdin;
+		}
+
+		tmpfile.pubseekpos(0);
+		ctf->fd=dup(tmpfile.fileno());
+		ctf->contents=strdup("");
+		ctf->sender=testmode_sender;
+		ctf->receipients=reinterpret_cast<char **>(
+			malloc(testmode_n_recipients * sizeof(char *))
+		);
+		ctf->oreceipients_utf8=reinterpret_cast<char **>(
+			malloc(testmode_n_recipients * sizeof(char *))
+		);
+		ctf->dsnreceipients=reinterpret_cast<char **>(
+			malloc(testmode_n_recipients * sizeof(char *))
+		);
+		ctf->delstatus=reinterpret_cast<char **>(
+			malloc(testmode_n_recipients * sizeof(char *))
+		);
+		ctf->lines=reinterpret_cast<char **>(
+			malloc(sizeof(char *))
+		);
+
+		for (unsigned i=0; i<testmode_n_recipients; i++)
+		{
+			ctf->receipients[i]=ctf->oreceipients_utf8[i]=
+				testmode_recipients[i];
+
+			static char empty[]="";
+			ctf->dsnreceipients[i]=empty;
+			ctf->delstatus[i]=empty;
+		}
+		ctf->lines[0]=nullptr;
+		return 0;
+
+	}
+	return ctlfile_openi(del->inum, ctf, 0);
+}
+
+const char *esmtp_msg_filename(struct moduledel *del)
+{
+	if (testmode_sender)
+		return "/dev/stdin";
+
+	return qmsgsdatname(del->inum);
+}
+
+int next_message(int timeout)
+{
+	fd_set	fdr;
+	struct	timeval	tv;
+
+	FD_ZERO(&fdr);
+	FD_SET(0, &fdr);
+	tv.tv_sec=timeout;
+	tv.tv_usec=0;
+
+	if ( testmode_sender || sox_select(1, &fdr, 0, 0, &tv) > 0)
+		return 1;
+	return 0;
 }

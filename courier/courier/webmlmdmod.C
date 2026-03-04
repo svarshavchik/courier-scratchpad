@@ -157,15 +157,15 @@ static std::string findparam(std::list<std::string> &args, std::string name)
 	return "";
 }
 
-static void unknown_attachment_action(struct rfc2045id *idptr,
-				      const char *content_type,
-				      const char *content_name,
+static void unknown_attachment_action(std::string_view id,
+				      std::string_view content_type,
+				      std::string_view content_name,
 				      off_t size,
 				      void *arg)
 {
 	std::list<std::string> *argsp=(std::list<std::string> *)arg;
 
-	std::string content_type_s(content_type);
+	std::string content_type_s(content_type.begin(), content_type.end());
 
 	std::replace(content_type_s.begin(),
 		     content_type_s.end(), '<', ' ');
@@ -177,13 +177,14 @@ static void unknown_attachment_action(struct rfc2045id *idptr,
 
 }
 
-static char *get_textlink(const char *url, void *arg)
+static std::string get_textlink(std::string_view url,
+				std::string_view disp_url)
 {
-	return strdup(url ? url:"");
+	return {url.begin(), url.end()};
 }
 
-static void inline_image_action(struct rfc2045id *idptr,
-				const char *content_type,
+static void inline_image_action(std::string_view id,
+				std::string_view content_type,
 				void *arg)
 {
 	fflush(stdout);
@@ -193,7 +194,7 @@ static void inline_image_action(struct rfc2045id *idptr,
 	std::cout << "admin/modmimefetch?msgname="
 		  << cgi("msgname")
 		  << std::flush;
-	msg2html_showmimeid(idptr, NULL);
+	msg2html_showmimeid(id, "");
 
 	printf("\" />");
 }
@@ -232,28 +233,27 @@ HANDLER("MODMSG", emit_modmsg)
 
 	std::string modfilename=MODQUEUE "/" + filename;
 
-	FILE *fp=fopen(modfilename.c_str(), "r");
+	std::ifstream fp{modfilename};
 
 	if (!fp)
 		return;
 
-	struct rfc2045 *rfc=rfc2045_fromfp(fp);
+	rfc2045::entity message;
 
-	if (!rfc)
 	{
-		fclose(fp);
-		return;
+		auto &rdbuf=*fp.rdbuf();
+
+		std::istreambuf_iterator<char> b{&rdbuf}, e;
+
+		rfc2045::entity::line_iter<false>::iter parser{b, e};
+
+		message.parse(parser);
 	}
 
-	fseek(fp, 0L, SEEK_END);
-	fseek(fp, 0L, SEEK_SET);
-
-	struct msg2html_info *msg2htmlp=msg2html_alloc("utf-8");
+	auto msg2htmlp=msg2html_alloc("utf-8");
 
 	if (!msg2htmlp)
 	{
-		rfc2045_free(rfc);
-		fclose(fp);
 		return;
 	}
 
@@ -266,10 +266,8 @@ HANDLER("MODMSG", emit_modmsg)
 	msg2htmlp->unknown_attachment_action=unknown_attachment_action;
 	msg2htmlp->inline_image_action=inline_image_action;
 	msg2htmlp->get_textlink=get_textlink;
-	msg2html(fp, rfc, msg2htmlp);
+	msg2html(*fp.rdbuf(), message, msg2htmlp);
 	msg2html_free(msg2htmlp);
-	rfc2045_free(rfc);
-	fclose(fp);
 }
 
 std::string webmlmd::do_mod_accept(std::string filename)

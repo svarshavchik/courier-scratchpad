@@ -1,5 +1,5 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
-<!-- Copyright 1999 - 2011 S. Varshavchik.  See COPYING for -->
+<!-- Copyright 1999 - 2026 S. Varshavchik.  See COPYING for -->
 <!-- distribution information. -->
 <refentry id="sendmail">
   <info><author><firstname>Sam</firstname><surname>Varshavchik</surname><contrib>Author</contrib></author><productname>Courier Mail Server</productname></info>
@@ -363,6 +363,13 @@ but either the
 <envar>NAME</envar> environment variable is set,  the contents of the -F option,
 or the environment variable, will replace the sender's name in the
 <literal>From:</literal> header.</para>
+
+<para>
+  If the <literal>From:</literal> header is present in the message, and contains
+  two or more addresses, and either the <option>-F</option> option was
+  specified or one of the above environment variables were set, they get
+  applied to every address in the <literal>From:</literal> header.
+</para>
 
 <para>
 If the <literal>From:</literal> header is not present in the message, one is

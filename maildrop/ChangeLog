@@ -1,3 +1,8 @@
+2026-01-24  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* mailbot: use more appropriate exit codes when terminating with
+	an error.
+
 2026-01-23  Sam Varshavchik  <mrsam@courier-mta.com>
 
 	* mailbot: fix non-plain text autoreplies, removing a broken error
