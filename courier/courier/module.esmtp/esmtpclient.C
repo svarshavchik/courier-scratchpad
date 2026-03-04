@@ -114,8 +114,6 @@ void esmtpchild(unsigned childnum)
 
 	while ((del=esmtp_module_getdel()) != 0)
 	{
-		struct	timeval	tv;
-
 #if 0
 		clog_msg_start_info();
 		clog_msg_str("Process ");
