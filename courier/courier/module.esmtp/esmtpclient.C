@@ -38,6 +38,10 @@
 #if	HAVE_UTIME
 #include	<utime.h>
 #endif
+#include	<time.h>
+#if HAVE_SYS_TIME_H
+#include	<sys/time.h>
+#endif
 
 
 #include	<ctype.h>
@@ -83,6 +87,12 @@ static void libesmtp_deinit(struct esmtp_info *info);
 
 static void sendesmtp(struct esmtp_info *, struct my_esmtp_info *);
 
+extern struct moduledel *esmtp_module_getdel();
+extern int esmtp_open_ctlfile(struct moduledel *,
+			      struct ctlfile *);
+extern const char *esmtp_msg_filename(struct moduledel *);
+extern int next_message(int timeout);
+
 /* We get here as a new child process of the courieresmtp driver */
 
 void esmtpchild(unsigned childnum)
@@ -102,9 +112,8 @@ void esmtpchild(unsigned childnum)
 
 	/* Retrieve delivery request until courieresmtp closes the pipe */
 
-	while ((del=module_getdel()) != 0)
+	while ((del=esmtp_module_getdel()) != 0)
 	{
-		fd_set	fdr;
 		struct	timeval	tv;
 
 #if 0
@@ -125,7 +134,7 @@ void esmtpchild(unsigned childnum)
 		** the control file, we're done.
 		*/
 
-		if (ctlfile_openi(del->inum, &ctf, 0) == 0)
+		if (esmtp_open_ctlfile(del, &ctf) == 0)
 		{
 			int changed_vhosts=ctlfile_setvhost(&ctf);
 			const char *sec;
@@ -204,12 +213,7 @@ void esmtpchild(unsigned childnum)
 		while (info && info->esmtpkeepaliveping &&
 		       esmtp_connected(info))
 		{
-			FD_ZERO(&fdr);
-			FD_SET(0, &fdr);
-			tv.tv_sec=info->esmtpkeepaliveping;
-			tv.tv_usec=0;
-
-			if ( sox_select(1, &fdr, 0, 0, &tv) > 0)
+			if (next_message(info->esmtpkeepaliveping))
 				break;
 
 			if (esmtp_ping(info))
@@ -883,7 +887,7 @@ static void pushdsn(struct esmtp_info *info, struct my_esmtp_info *my_info)
 	int fd;
 	struct esmtp_mailfrom_info mf_info;
 
-	if ((fd=open(qmsgsdatname(del->inum), O_RDONLY)) < 0)
+	if ((fd=open(esmtp_msg_filename(del), O_RDONLY)) < 0)
 	{
 		connect_error1(del, ctf, -1);
 		return;

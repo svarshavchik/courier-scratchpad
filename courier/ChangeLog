@@ -1,7 +1,47 @@
+2026-03-02  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* courier/sendmail2.C (rewrite_from): Preserve multiple addresses in
+	the explicit From: header if it exists on locally originated email
+	(the sendmail command), apply all environment variables and options
+	to each address in the existing From: header.
+
+2026-03-01  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* sqwebmail: Convert address book page's code to C++.
+
+2026-02-22  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* sqwebmail: Update draft screen to use the C++ mime parser, fixing
+	several long-standing issues
+
+	* sqwebmail: Address book buttons insert the email addresses from
+	the addressbook directly, instead of their nicknames.
+
+	* sqwebmail: Nicknames are no longer replaced with the actual
+	addresses when the draft message is set, the actual addresses get
+	inserted immediately.
+
+	* sqwebmail: Make the From, To, Cc, Bcc fields on the create message
+	screen slightly larger.
+
+	* sqwebmail: Convert pcp daemon to use the C++ MIME parser.
+
+	* sqwebmail: Spell checking UI fixes.
+
+2026-02-18  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* sqwebmail: Fix problem with duplicate signatures after spell checking
+	a draft message.
+
 2026-01-30  Sam Varshavchik  <mrsam@courier-mta.com>
 
 	* courier/maildrop: handle "binary" transfer encoding analogous to
 	8bit handling.
+
+2026-01-24  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* mailbot: use more appropriate exit codes when terminating with
+	an error.
 
 2026-01-23  Sam Varshavchik  <mrsam@courier-mta.com>
 

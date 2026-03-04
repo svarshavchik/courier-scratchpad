@@ -10,6 +10,36 @@
 #include	<stdlib.h>
 #include	<string.h>
 
+namespace {
+
+	struct wrapped_header_iter {
+		using iterator_category=std::output_iterator_tag;
+		using value_type=void;
+		using pointer=void;
+		using reference=void;
+		using difference_type=void;
+
+		std::string wrapped_header;
+
+		const char *prefix="";
+
+		auto &operator*() { return *this; }
+
+		auto &operator++() { return *this; }
+
+		auto &operator++(int) { return *this; }
+
+		auto &operator=(std::string l)
+		{
+			while (!l.empty() && isspace(l.back()))
+				l.pop_back();
+			wrapped_header += prefix;
+			wrapped_header += std::move(l);
+			prefix="\n  ";
+			return *this;
+		}
+	};
+}
 
 char *rw_rewrite_header(
 	struct rw_transport *rw,
@@ -74,23 +104,11 @@ char *rw_rewrite_header(
 
 	if ( !*errmsgptr)
 	{
-		std::string wrapped_header;
-
-		std::string prefix="";
-
-		auto collect = [&]
-			(std::string l)
-		{
-			while (!l.empty() && isspace(l.back()))
-				l.pop_back();
-			wrapped_header += prefix;
-			wrapped_header += std::move(l);
-			prefix="\n  ";
-		};
+		wrapped_header_iter collect;
 
 		rfca.print_wrapped(rfca.begin(), rfca.end(), 70, collect);
 
-		new_header=strdup(wrapped_header.c_str());
+		new_header=strdup(collect.wrapped_header.c_str());
 	}
 
 	for (auto &b:bufptrs)

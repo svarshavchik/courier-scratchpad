@@ -329,49 +329,51 @@ static std::string rewrite_from_idna(const char *oldfrom, const char *newuser,
 		rfca.clear();
 		rfca.push_back({std::move(namet), std::move(usert)});
 	}
-	else
+	else for (auto &address:rfca)
 	{
-		rfca.resize(1);
-
 		if (!usert.empty())
 		{
-			rfca[0].address.erase(
-				rfca[0].address.begin(),
+			address.address.erase(
+				address.address.begin(),
 				std::find_if(
-					rfca[0].address.begin(),
-					rfca[0].address.end(),
+					address.address.begin(),
+					address.address.end(),
 					[]
 					(auto &t)
 					{
 						return t.type == '@';
 					}));
 
-			rfca[0].address.insert(
-				rfca[0].address.begin(),
+			address.address.insert(
+				address.address.begin(),
 				usert.begin(), usert.end());
 		}
 
-		if (!hostt.empty() && !rfca[0].address.empty())
+		if (!hostt.empty() && !address.address.empty())
 		{
-			rfca[0].address.erase(
+			rfca.resize(1);
+
+			address.address.erase(
 				std::find_if(
-					rfca[0].address.begin(),
-					rfca[0].address.end(),
+					address.address.begin(),
+					address.address.end(),
 					[]
 					(auto &t)
 					{
 						return t.type == '@';
 					}),
-				rfca[0].address.end());
+				address.address.end());
 
-			rfca[0].address.push_back({'@', "@"});
-			rfca[0].address.insert(
-				rfca[0].address.end(),
+			address.address.push_back({'@', "@"});
+			address.address.insert(
+				address.address.end(),
 				hostt.begin(),
 				hostt.end());
 		}
 		if (!namet.empty())
-			rfca[0].name=namet;
+		{
+			address.name=namet;
+		}
 	}
 
 	std::string s;

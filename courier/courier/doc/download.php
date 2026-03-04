@@ -126,7 +126,7 @@ body div.main { height: 100%; width: 100%; overflow: auto;
                                                    $Date[$package],
                                                    $Filename[$package],
                                                    $Size[$package]);
-
+				     print "\n";
                                      if ($has_devel)
                                      {
                                              print "<tr><td colspan='4'><hr/></td></tr>";
@@ -136,6 +136,7 @@ body div.main { height: 100%; width: 100%; overflow: auto;
                                                            $Date[$packagedevel],
                                                            $Filename[$packagedevel],
                                                            $Size[$packagedevel]);
+					     print "\n";
                                      }
 
                                      print "</tbody></table>";
