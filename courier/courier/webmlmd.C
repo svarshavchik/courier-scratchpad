@@ -8,6 +8,7 @@
 #include	"cgi/cgi.h"
 #include	"rfc822/rfc822.h"
 #include	"rfc822/rfc2047.h"
+#include	"rfc2045/rfc2045.h"
 #include	"numlib/numlib.h"
 #include	<courier-unicode.h>
 #include	"datadir.h"
@@ -20,6 +21,7 @@
 #endif
 #include	<string.h>
 #include	<signal.h>
+#include	<fcntl.h>
 
 #include	<sys/types.h>
 #include	<sys/stat.h>
@@ -1033,6 +1035,51 @@ static void adminrequest(std::string admin_path)
 
 		webmlmd::showhtmlform("webmlmlistadminmod.tmpl.html", parms);
 		return;
+	}
+
+	if (admin_path == "modmimefetch")
+	{
+		std::string filename;
+
+		filename=cgi("msgname");
+
+		if (filename.find('/') != filename.npos)
+			filename="";
+
+		if (filename != "")
+		{
+			std::string modfilename=MODQUEUE "/" + filename;
+
+			rfc822::fdstreambuf fd{
+				open(modfilename.c_str(), O_RDONLY)
+			};
+
+			std::istreambuf_iterator<char> b{&fd}, e;
+
+			rfc2045::entity::line_iter<false>::iter parser{b, e};
+			rfc2045::entity message;
+
+			message.parse(parser);
+
+			auto part=message.find(cgi("mimeid"));
+
+			if (part)
+			{
+				cginocache();
+				printf("Content-Type: %s\n\n",
+				       part->content_type.value.c_str());
+
+				rfc822::mime_decoder decoder{
+					[&]
+					(const char *ptr, size_t n)
+					{
+						fwrite(ptr, n, 1, stdout);
+					}, fd};
+				decoder.decode_header=false;
+				decoder.decode(*part);
+				return;
+			}
+		}
 	}
 
 	webmlmd::showhtmlform("webmlmlistadmin.tmpl.html");
