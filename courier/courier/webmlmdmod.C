@@ -199,8 +199,7 @@ static void inline_image_action(std::string_view id,
 	printf("\" />");
 }
 
-static char *get_url_to_mime_part(const char *mimeid,
-				  void *arg)
+static std::string get_url_to_mime_part(const char *mimeid)
 {
 	std::ostringstream o;
 
@@ -208,7 +207,7 @@ static char *get_url_to_mime_part(const char *mimeid,
 	  << "/admin/modmimefetch?msgname=" << cgi("msgname")
 	  << "&mimeid=" << mimeid;
 
-	return strdup(o.str().c_str());
+	return o.str();
 }
 
 
