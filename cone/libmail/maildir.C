@@ -267,30 +267,9 @@ string mail::maildir::getfilename(size_t i)
 	if (i >= index.size())
 		return n;
 
-	char *fn;
+	auto dir=::maildir::name2dir(path, folderPath);
 
-	char *dir=maildir_name2dir(path.c_str(), folderPath.c_str());
-
-	if (!dir)
-		return n;
-
-	try {
-		fn=maildir_filename(dir, nullptr,
-				    index[i].lastKnownFilename.c_str());
-		free(dir);
-	} catch (...) {
-		free(dir);
-		LIBMAIL_THROW(LIBMAIL_THROW_EMPTY);
-	}
-
-	if (fn)
-		try {
-			n=fn;
-			free(fn);
-		} catch (...) {
-			free(fn);
-			LIBMAIL_THROW(LIBMAIL_THROW_EMPTY);
-		}
+	n=::maildir::filename(dir, "", index[i].lastKnownFilename);
 
 	return n;
 }
