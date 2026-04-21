@@ -1,3 +1,35 @@
+2026-04-18  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* sqwebmail: Tweaks to the mail filter screen.
+
+2026-04-05  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* sqwebmail: Fix possible encoding problem with shown timestamps.
+
+2026-04-01  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* sqwebmail: Fix display glitch when removing a message from a sharable
+	folder.
+
+2026-03-29  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* mailbot: remove extra newlines at the end of autoreplies, line-wrap
+	the headers in the autoreply.
+
+	* sqwebmail: improve the algorithm for sorting messages in the folder
+	by subject.
+
+2026-03-25  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* mailbot: do not require either the -t or the -m option to be
+	specified, this is treated as an empty template for a reply/forward
+	format that requires one, and do not abort if the From: header was
+	missing, the response is logically treated as if it was empty.
+
+2026-03-17  Sam Varshavchik  <mrsam@courier-mta.com>
+
+	* sqwebmail: Fix formatting issues on the calendar display.
+
 2026-03-15  Sam Varshavchik  <mrsam@courier-mta.com>
 
 	* courier-imap: Convert C to C++ code.

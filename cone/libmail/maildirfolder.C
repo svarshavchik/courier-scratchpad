@@ -291,16 +291,13 @@ mail::maildir::folder::listinfo::~listinfo()
 // The callback filters only the folders under the list path
 
 void mail::maildir::folder::maildir_list_callback(const char *folder,
-						  void *vp)
+						  listinfo &li)
 {
-	mail::maildir::folder::listinfo *li=
-		(mail::maildir::folder::listinfo *)vp;
-
-	if (strncmp(folder, li->path.c_str(), li->path.size()) ||
-	    folder[li->path.size()] != '.')
+	if (strncmp(folder, li.path.c_str(), li.path.size()) ||
+	    folder[li.path.size()] != '.')
 		return; // Outside the hierarchy being listed.
 
-	folder += li->path.size();
+	folder += li.path.size();
 	++folder;
 
 	// If the remaining portion of the name has another period, there's
@@ -311,9 +308,9 @@ void mail::maildir::folder::maildir_list_callback(const char *folder,
 	const char *p=strchr(folder, '.');
 
 	if (p)
-		li->subdirs.insert(string(folder, p));
+		li.subdirs.insert(string(folder, p));
 	else
-		li->list.insert(string(folder));
+		li.list.insert(string(folder));
 }
 
 void mail::maildir::folder::readSubFolders( mail::callback::folderList
@@ -333,9 +330,13 @@ void mail::maildir::folder::readSubFolders( mail::callback::folderList
 
 	li.path=path;
 
-	maildir_list(maildirAccount->path.c_str(),
-		     &mail::maildir::folder::maildir_list_callback,
-		     &li);
+	::maildir::list(maildirAccount->path.c_str(),
+		      [&li]
+		      (auto &name)
+		      {
+			      maildir_list_callback(name.c_str(), li);
+		      });
+
 
 	list<mail::folder *> folderList;
 	list<mail::folder *>::iterator b, e;

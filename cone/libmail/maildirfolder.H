@@ -40,7 +40,7 @@ class maildir::folder : public mail::folder {
 		std::set<std::string> list, subdirs;
 	};
 
-	static void maildir_list_callback(const char *, void *);
+	static void maildir_list_callback(const char *, listinfo &);
 
 public:
 	friend class maildir;
