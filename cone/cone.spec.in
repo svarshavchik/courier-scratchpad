@@ -1,5 +1,5 @@
 # Fix for autoconf-archive/gcc 16 issue
-%define _pkg_extra_cxxflags -std=c++17
+%define _pkg_extra_cxxflags -std=gnu++17
 
 BuildRequires: ncurses-devel
 
