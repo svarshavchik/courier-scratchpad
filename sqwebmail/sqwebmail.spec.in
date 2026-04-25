@@ -1,11 +1,9 @@
 #
-# Copyright 1998 - 2018 S. Varshavchik.  See COPYING for
+# Copyright 1998 - 2026 S. Varshavchik.  See COPYING for
 # distribution information.
 
-
-#
-#  Need to version-upgrade RH builds due to different directory locations.
-#
+# Fix for autoconf-archive/gcc 16 issue
+%define _pkg_extra_cxxflags -std=c++17
 
 %if 0%{!?dist:1}
 %define courier_release %(release="`rpm -q --queryformat='.%{VERSION}' redhat-release 2>/dev/null`" ; if test $? != 0 ; then release="`rpm -q --queryformat='.%{VERSION}' fedora-release 2>/dev/null`" ; if test $? != 0 ; then release="" ; fi ; fi ; echo "$release")

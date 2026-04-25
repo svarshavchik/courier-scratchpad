@@ -1,7 +1,10 @@
 #
-# Copyright 1998 - 2025 S. Varshavchik.  See COPYING for
+# Copyright 1998 - 2026 S. Varshavchik.  See COPYING for
 # distribution information.
 #
+
+# Fix for autoconf-archive/gcc 16 issue
+%define _pkg_extra_cxxflags -std=c++17
 
 # --- Build behavior defines --------------------------------------------------
 
