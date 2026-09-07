@@ -1,0 +1,88 @@
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.107-04:00 level=WARN source=types.go:1027 msg="invalid option provided" option=_capturingTokenCorrelationId
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.107-04:00 level=WARN source=types.go:1027 msg="invalid option provided" option=_otelTraceContext
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.107-04:00 level=WARN source=types.go:1027 msg="invalid option provided" option=_telemetryTurn
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.107-04:00 level=WARN source=types.go:1027 msg="invalid option provided" option=_enableThinking
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.107-04:00 level=WARN source=types.go:1027 msg="invalid option provided" option=_conversationId
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.124-04:00 level=INFO source=sched.go:1147 msg="disabling mmap for llama-server load by default" model=/usr/share/ollama/.ollama/models/blobs/sha256-1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a reason=cpu
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.124-04:00 level=INFO source=llama_server.go:433 msg="starting llama-server" cmd="/usr/local/lib/ollama/llama-server --model /usr/share/ollama/.ollama/models/blobs/sha256-1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a --port 36839 --host 127.0.0.1 --no-webui --offline -c 65536 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --load-mode none --flash-attn auto -b 2048 -ub 2048 --context-shift --keep 4"
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.125-04:00 level=INFO source=llama_server.go:1048 msg="loading model via llama-server" model=/usr/share/ollama/.ollama/models/blobs/sha256-1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: srv    load_model: loading model '/usr/share/ollama/.ollama/models/blobs/sha256-1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a'
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: srv    load_model: local path '/usr/share/ollama/.ollama/models/blobs/sha256-1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a'
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: loaded meta data with 35 key-value pairs and 579 tensors from /usr/share/ollama/.ollama/models/blobs/sha256-1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a (version GGUF V3 (latest))
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   0:                       general.architecture str              = qwen3moe
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   1:                           general.basename str              = Qwen3-Coder
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   2:                          general.file_type u32              = 15
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   3:                           general.finetune str              = Instruct
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   4:                            general.license str              = apache-2.0
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   5:                       general.license.link str              = https://huggingface.co/Qwen/Qwen3-Cod...
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   6:                               general.name str              = Qwen3 Coder 30B A3B Instruct
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   7:                    general.parameter_count u64              = 30532122624
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   8:               general.quantization_version u32              = 2
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv   9:                         general.size_label str              = 30B-A3B
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  10:                               general.tags arr[str,1]       = ["text-generation"]
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  11:                               general.type str              = model
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  12:              qwen3moe.attention.head_count u32              = 32
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  13:           qwen3moe.attention.head_count_kv u32              = 4
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  14:              qwen3moe.attention.key_length u32              = 128
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  15:  qwen3moe.attention.layer_norm_rms_epsilon f32              = 0.000001
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  16:            qwen3moe.attention.value_length u32              = 128
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  17:                       qwen3moe.block_count u32              = 48
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  18:                    qwen3moe.context_length u32              = 262144
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  19:                  qwen3moe.embedding_length u32              = 2048
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  20:                      qwen3moe.expert_count u32              = 128
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  21:        qwen3moe.expert_feed_forward_length u32              = 768
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  22: qwen3moe.expert_shared_feed_forward_length u32              = 0
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  23:                 qwen3moe.expert_used_count u32              = 8
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  24:               qwen3moe.feed_forward_length u32              = 5472
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  25:                    qwen3moe.rope.freq_base f32              = 10000000.000000
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  26:                    tokenizer.chat_template str              = {% macro render_item_list(item_list, ...
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  27:               tokenizer.ggml.add_bos_token bool             = false
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  28:                tokenizer.ggml.eos_token_id u32              = 151645
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  29:                      tokenizer.ggml.merges arr[str,151387]  = ["Ġ Ġ", "ĠĠ ĠĠ", "i n", "Ġ t",...
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  30:                       tokenizer.ggml.model str              = gpt2
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  31:            tokenizer.ggml.padding_token_id u32              = 151643
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  32:                         tokenizer.ggml.pre str              = qwen2
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  33:                  tokenizer.ggml.token_type arr[i32,151936]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:22.377-04:00 level=INFO source=llama_server.go:1350 msg="waiting for llama-server to become available" status="llm server loading model"
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - kv  34:                      tokenizer.ggml.tokens arr[str,151936]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - type  f32:  241 tensors
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - type q4_K:  289 tensors
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: llama_model_loader: - type q6_K:   49 tensors
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load: 0 unused tokens
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load: printing all EOG tokens:
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load:   - 128247 ('</s>')
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load:   - 151643 ('<|endoftext|>')
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load:   - 151645 ('<|im_end|>')
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load:   - 151662 ('<|fim_pad|>')
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load:   - 151663 ('<|repo_name|>')
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load:   - 151664 ('<|file_sep|>')
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load: special tokens cache size = 27
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load: token to piece cache size = 0.9311 MB
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load_tensors: loading model tensors, this can take a while... (load_mode = none)
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load_tensors:          CPU model buffer size =  4258.84 MiB
+Sep 07 09:42:22 ripper.email-scan.com ollama[792529]: load_tensors:   CPU_REPACK model buffer size = 13432.50 MiB
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: srv    load_model: initializing, n_slots = 1, n_ctx_slot = 65536, kv_unified = 'false'
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: slot   load_model: id  0 | task -1 | new slot, n_ctx = 65536
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: srv    load_model: prompt cache is enabled, size limit: 8192 MiB
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: srv    load_model: use `--cache-ram 0` to disable the prompt cache
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: srv    load_model: for more info see https://github.com/ggml-org/llama.cpp/pull/16391
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: srv    load_model: context checkpoints enabled, max = 32, min spacing = 8192
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: srv  llama_server: model loaded
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: time=2026-09-07T09:42:42.502-04:00 level=INFO source=sched.go:728 msg="loaded runners" count=1
+Sep 07 09:42:42 ripper.email-scan.com ollama[792529]: srv          load:  - looking for better prompt, base f_keep = -1.000, f_sim = 0.000
+Sep 07 09:42:58 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2048, progress = 0.06, t =  16.28 s / 125.79 tokens per second
+Sep 07 09:43:20 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   4096, progress = 0.11, t =  37.51 s / 109.19 tokens per second
+Sep 07 09:43:46 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   6144, progress = 0.17, t =  63.79 s / 96.32 tokens per second
+Sep 07 09:44:16 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   8192, progress = 0.23, t =  94.29 s / 86.88 tokens per second
+Sep 07 09:44:51 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  10240, progress = 0.28, t = 128.95 s / 79.41 tokens per second
+Sep 07 09:45:31 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  12288, progress = 0.34, t = 169.25 s / 72.60 tokens per second
+Sep 07 09:46:20 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  14336, progress = 0.40, t = 217.62 s / 65.88 tokens per second
+Sep 07 09:47:15 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  16384, progress = 0.46, t = 273.30 s / 59.95 tokens per second
+Sep 07 09:48:18 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  18432, progress = 0.51, t = 335.59 s / 54.92 tokens per second
+Sep 07 09:49:26 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  20480, progress = 0.57, t = 404.00 s / 50.69 tokens per second
+Sep 07 09:50:41 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  22528, progress = 0.63, t = 478.36 s / 47.09 tokens per second
+Sep 07 09:52:02 ripper.email-scan.com ollama[792529]: slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  24576, progress = 0.68, t = 559.73 s / 43.91 tokens per second
+Sep 07 09:52:22 ripper.email-scan.com ollama[792529]: [GIN] 2026/09/07 - 09:52:22 | 500 |         10m0s |       127.0.0.1 | POST     "/api/chat"
+Sep 07 09:52:23 ripper.email-scan.com ollama[792529]: srv          stop: cancel task, id_task = 0
